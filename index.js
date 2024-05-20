@@ -9,11 +9,17 @@ const { sub } = JSON.parse(
   Buffer.from(process.env.DUOLINGO_JWT.split('.')[1], 'base64').toString(),
 )
 
+const getArgValue = (arg, defaultValue) => {
+  return arg !== undefined ? parseInt(arg, 10) : defaultValue;
+};
+
 const [,, lessonsArg, minIntervalArg, maxIntervalArg] = process.argv;
 
-const lessons = parseInt(lessonsArg, 10);
-const minInterval = parseInt(minIntervalArg, 10);
-const maxInterval = parseInt(maxIntervalArg, 20);
+const lessons = getArgValue(lessonsArg, 10); // 默认值为 10
+const minInterval = getArgValue(minIntervalArg, 10); // 默认值为 10 秒
+const maxInterval = getArgValue(maxIntervalArg, 20); // 默认值为 20 秒
+
+console.log('lesson: %d, minInt: %d, maxInt: %d', lessons, minInterval, maxInterval);
 
 if (isNaN(lessons) || isNaN(minInterval) || isNaN(maxInterval)) {
   console.error('Please provide valid numbers for lessons, minInterval, and maxInterval.');
@@ -107,8 +113,9 @@ for (let i = 0; i < lessons; i++) {
   console.log({ xp: response.xpGain })
 
   if (i < lessons - 1) {
-    const interval = Math.floor(Math.random() * (maxInterval - minInterval + 1) + minInterval) * 1000;
-    console.log(`Waiting for ${interval / 1000} seconds before next lesson...`);
-    await sleep(interval);
+    const interval = Math.random() * (maxInterval - minInterval) + minInterval;
+    const intervalInMs = interval * 1000;
+    // console.log(`Waiting for ${interval.toFixed(2)} seconds before next lesson...`);
+    await sleep(intervalInMs);
   }
 }
