@@ -8,31 +8,31 @@ try {
 			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
 	};
 
-const { sub } = JSON.parse(
-  Buffer.from(process.env.DUOLINGO_JWT.split('.')[1], 'base64').toString(),
-)
+  const { sub } = JSON.parse(
+    Buffer.from(process.env.DUOLINGO_JWT.split('.')[1], 'base64').toString(),
+  )
 
-const getArgValue = (arg, defaultValue) => {
-  return arg !== undefined ? parseInt(arg, 10) : defaultValue;
-};
+  const getArgValue = (arg, defaultValue) => {
+    return arg !== undefined ? parseInt(arg, 10) : defaultValue;
+  };
 
-const [,, lessonsArg, minIntervalArg, maxIntervalArg] = process.argv;
+  const [,, lessonsArg, minIntervalArg, maxIntervalArg] = process.argv;
 
-const lessons = getArgValue(lessonsArg, 10); // 默认值为 10
-const minInterval = getArgValue(minIntervalArg, 10); // 默认值为 10 秒
-const maxInterval = getArgValue(maxIntervalArg, 20); // 默认值为 20 秒
+  const lessons = getArgValue(lessonsArg, 10); // 默认值为 10
+  const minInterval = getArgValue(minIntervalArg, 10); // 默认值为 10 秒
+  const maxInterval = getArgValue(maxIntervalArg, 20); // 默认值为 20 秒
 
-console.log('lesson: %d, minInt: %d, maxInt: %d', lessons, minInterval, maxInterval);
+  console.log('lesson: %d, minInt: %d, maxInt: %d', lessons, minInterval, maxInterval);
 
-if (isNaN(lessons) || isNaN(minInterval) || isNaN(maxInterval)) {
-  console.error('Please provide valid numbers for lessons, minInterval, and maxInterval.');
-  process.exit(1);
-}
+  if (isNaN(lessons) || isNaN(minInterval) || isNaN(maxInterval)) {
+    console.error('Please provide valid numbers for lessons, minInterval, and maxInterval.');
+    process.exit(1);
+  }
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-	const { fromLanguage, learningLanguage } = await fetch(
-		`https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage`,
+	const { fromLanguage, learningLanguage, xpGains } = await fetch(
+		`https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage,xpGains`,
 		{
 			headers,
 		},
@@ -108,8 +108,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 					isV2: true,
 					juicy: true,
 					learningLanguage,
+          skillId: xpGains.find(xpGain => xpGain.skillId).skillId, 
 					smartTipsVersion: 2,
-					type: "GLOBAL_PRACTICE",
+					type: "SPEAKING_PRACTICE",
 				}),
 				headers,
 				method: "POST",
@@ -134,7 +135,12 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 			},
 		).then((response) => response.json());
 
-		xp += response.xpGain;
+    xp += response.xpGain;
+
+    const interval = Math.random() * (maxInterval - minInterval) + minInterval;
+    const intervalInMs = interval * 1000;
+    console.log(`{XP: ${response.xpGain}}, Waiting for ${interval.toFixed(2)} seconds before next lesson...`);
+    await sleep(intervalInMs);
 	}
 
 	console.log(`🎉 You won ${xp} XP`);
@@ -143,11 +149,4 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 	if (error instanceof Error) {
 		console.log(error.message);
 	}
-
-  if (i < lessons - 1) {
-    const interval = Math.random() * (maxInterval - minInterval) + minInterval;
-    const intervalInMs = interval * 1000;
-    // console.log(`Waiting for ${interval.toFixed(2)} seconds before next lesson...`);
-    await sleep(intervalInMs);
-  }
 }
