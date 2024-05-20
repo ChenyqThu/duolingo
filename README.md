@@ -6,18 +6,24 @@
 
 Streak keeper and XP farm for Duolingo. Never get demoted again!
 
-## Usage
+### How to use
 
-To make it work, you need to make get an authorization token from the [Duolingo](https://duolingo.com) web app. Simply run the following script in the browser's console while logged in:
+1. [Fork this repository](https://github.com/rfoel/duolingo/fork)
+2. Go to [Duolingo](https://www.duolingo.com)
+3. While logged in, open the browser's console (Option (⌥) + Command (⌘) + J (on macOS) or Shift + CTRL + J (on Windows/Linux))
+4. Get the JWT token by pasting this in the console, and copy the value ( without `'`)
 
 ```js
 document.cookie
   .split(';')
   .find(cookie => cookie.includes('jwt_token'))
   .split('=')[1]
-```
-
-Then copy the token given and set a [repository secret](https://docs.github.com/actions/learn-github-actions/variables) with the name `DUOLINGO_JWT` in your GitHub Actions settings.
+ ```
+  
+  5. Go to your forked repository
+  6. Go to Settings > Secrets and Variables > Actions . And click the button `New Repository secret`
+  7. For the secret name use `DUOLINGO_JWT` for the secret value use the copied value from step 4.
+  8. Go the your forked repository and go the Actions tab and press the button `I understand my workflows, go ahead and enable them`
 
 ## Workflows
 
@@ -33,3 +39,19 @@ This repository can also "study" lessons for you. This will give you XP so you w
 
 - This project won't help with your daily or friend quests, it can only earn XP to move up the league rank;
 - This project won't do real lessons or stories, only practices, so it won't affect your learning path;
+
+## Running as a standalone script
+
+You can run this script outside GitHub if you want to. You can have an `.env` file with the `DUOLINGO_JWT` and run the script like so:
+
+```
+node --env-file=.env index.js
+```
+
+> Node v20.6.0 or later is needed to use the `--env-file` flag.
+
+You can also load the env in the terminal like so:
+
+```
+DUOLINGO_JWT=... node index.js
+```
